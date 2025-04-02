@@ -1,4 +1,5 @@
 "use strict";
+
 /*
  Copyright (C) 2012-2019 Grant Galitz
 
@@ -21,6 +22,22 @@ function registerGUIEvents() {
     addEvent("click", document.getElementById("play"), function (e) {
         IodineGUI.Iodine.play();
     });
+    addEvent('dragover', document.getElementById('emulator_target'), function (e) {
+        e.preventDefault();
+    });
+    addEvent("drop", document.getElementById("emulator_target"), function (e) {
+        e.preventDefault();
+        let file = e.dataTransfer.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function (event) {
+                let loadedROM = new Uint8Array(event.target.result);
+                IodineGUI.Iodine.attachROM(loadedROM);
+                IodineGUI.Iodine.play();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    });
     addEvent("click", document.getElementById("pause"), function (e) {
         IodineGUI.Iodine.pause();
     });
@@ -31,8 +48,7 @@ function registerGUIEvents() {
         setValue("sound", !!this.checked);
         if (this.checked) {
             IodineGUI.Iodine.enableAudio();
-        }
-        else {
+        } else {
             IodineGUI.Iodine.disableAudio();
         }
     });
@@ -84,7 +100,7 @@ function registerGUIEvents() {
                     e.preventDefault();
                     found = true;
                 }
-                if(!control.touches.includes(touches[i].identifier) && found) {
+                if (!control.touches.includes(touches[i].identifier) && found) {
                     control.touches.push(touches[i].identifier);
                     if (control.touches.length === 1) {
                         control.timestamp[touches[i].identifier] = IodineGUI.Iodine.lastTimestamp;
@@ -104,7 +120,7 @@ function registerGUIEvents() {
                 if (elementFromPoint === control.elem) {
                     found = true;
                 }
-                if(!control.touches.includes(touches[i].identifier) && found) {
+                if (!control.touches.includes(touches[i].identifier) && found) {
                     control.touches.push(touches[i].identifier);
                     if (control.touches.length === 1) {
                         IodineGUI.Iodine.keyDown(control.key);
@@ -246,37 +262,30 @@ function registerGUIEvents() {
                                 writeRedTemporaryText("file imported.");
                                 try {
                                     import_save(this.result);
-                                }
-                                catch (error) {
+                                } catch (error) {
                                     writeRedTemporaryText(error.message + " file: " + error.fileName + " line: " + error.lineNumber);
                                 }
-                            }
-                            else {
+                            } else {
                                 writeRedTemporaryText("importing file, please wait...");
                             }
                         }
                         binaryHandle.readAsBinaryString(this.files[this.files.length - 1]);
-                    }
-                    catch (error) {
+                    } catch (error) {
                         //Gecko 1.9.0, 1.9.1 (Non-Standard Method)
                         var romImageString = this.files[this.files.length - 1].getAsBinary();
                         try {
                             import_save(romImageString);
-                        }
-                        catch (error) {
+                        } catch (error) {
                             writeRedTemporaryText(error.message + " file: " + error.fileName + " line: " + error.lineNumber);
                         }
                     }
-                }
-                else {
+                } else {
                     writeRedTemporaryText("Incorrect number of files selected for local loading.");
                 }
-            }
-            catch (error) {
+            } catch (error) {
                 writeRedTemporaryText("Could not load in a locally stored ROM file.");
             }
-        }
-        else {
+        } else {
             writeRedTemporaryText("could not find the handle on the file to open.");
         }
         if (e.preventDefault) {
@@ -298,173 +307,147 @@ function registerGUIEvents() {
     addEvent("mouseover", document.getElementById("saves_menu"), rebuildSavesMenu);
     if (typeof document.hidden !== "undefined") {
         addEvent("visibilitychange", document, visibilityChangeHandle);
-    }
-    else if (typeof document.mozHidden !== "undefined") {
+    } else if (typeof document.mozHidden !== "undefined") {
         addEvent("mozvisibilitychange", document, mozVisibilityChangeHandle);
-    }
-    else if (typeof document.msHidden !== "undefined") {
+    } else if (typeof document.msHidden !== "undefined") {
         addEvent("msvisibilitychange", document, msVisibilityChangeHandle);
-    }
-    else if (typeof document.webkitHidden !== "undefined") {
+    } else if (typeof document.webkitHidden !== "undefined") {
         addEvent("webkitvisibilitychange", document, webkitVisibilityChangeHandle);
     }
     //Run on init as well:
     resizeCanvasFunc();
 }
+
 function registerDefaultSettings() {
     if (findValue("sound") === null) {
         setValue("sound", !!IodineGUI.defaults.sound);
-    }
-    else {
+    } else {
         IodineGUI.defaults.sound = !!findValue("sound");
     }
     if (findValue("volume") === null) {
         setValue("volume", +IodineGUI.defaults.volume);
-    }
-    else {
+    } else {
         IodineGUI.defaults.volume = +findValue("volume");
     }
     document.getElementById("volume").value = Math.round(IodineGUI.defaults.volume * 100);
     document.getElementById("speedset").value = 50;
     if (findValue("skipBoot") === null) {
         setValue("skipBoot", !!IodineGUI.defaults.skipBoot);
-    }
-    else {
+    } else {
         IodineGUI.defaults.skipBoot = !!findValue("skipBoot");
     }
     if (findValue("toggleSmoothScaling") === null) {
         setValue("toggleSmoothScaling", !!IodineGUI.defaults.toggleSmoothScaling);
-    }
-    else {
+    } else {
         IodineGUI.defaults.toggleSmoothScaling = !!findValue("toggleSmoothScaling");
     }
     if (findValue("toggleDynamicSpeed") === null) {
         setValue("toggleDynamicSpeed", !!IodineGUI.defaults.toggleDynamicSpeed);
-    }
-    else {
+    } else {
         IodineGUI.defaults.toggleDynamicSpeed = !!findValue("toggleDynamicSpeed");
     }
     if (findValue("toggleOffthreadGraphics") === null) {
         setValue("toggleOffthreadGraphics", !!IodineGUI.defaults.toggleOffthreadGraphics);
-    }
-    else {
+    } else {
         IodineGUI.defaults.toggleOffthreadGraphics = !!findValue("toggleOffthreadGraphics");
     }
     if (findValue("toggleOffthreadCPU") === null) {
         setValue("toggleOffthreadCPU", !!IodineGUI.defaults.toggleOffthreadCPU);
-    }
-    else {
+    } else {
         IodineGUI.defaults.toggleOffthreadCPU = !!findValue("toggleOffthreadCPU");
     }
     if (findValue("key_a") === null) {
         setValue("key_a", IodineGUI.defaults.keyZonesGBA[0] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[0] = findValue("key_a");
     }
     if (findValue("key_b") === null) {
         setValue("key_b", IodineGUI.defaults.keyZonesGBA[1] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[1] = findValue("key_b");
     }
     if (findValue("key_select") === null) {
         setValue("key_select", IodineGUI.defaults.keyZonesGBA[2] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[2] = findValue("key_select");
     }
     if (findValue("key_start") === null) {
         setValue("key_start", IodineGUI.defaults.keyZonesGBA[3] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[3] = findValue("key_start");
     }
     if (findValue("key_right") === null) {
         setValue("key_right", IodineGUI.defaults.keyZonesGBA[4] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[4] = findValue("key_right");
     }
     if (findValue("key_left") === null) {
         setValue("key_left", IodineGUI.defaults.keyZonesGBA[5] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[5] = findValue("key_left");
     }
     if (findValue("key_up") === null) {
         setValue("key_up", IodineGUI.defaults.keyZonesGBA[6] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[6] = findValue("key_up");
     }
     if (findValue("key_down") === null) {
         setValue("key_down", IodineGUI.defaults.keyZonesGBA[7] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[7] = findValue("key_down");
     }
     if (findValue("key_r") === null) {
         setValue("key_r", IodineGUI.defaults.keyZonesGBA[8] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[8] = findValue("key_r");
     }
     if (findValue("key_l") === null) {
         setValue("key_l", IodineGUI.defaults.keyZonesGBA[9] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesGBA[9] = findValue("key_l");
     }
     if (findValue("key_volumedown") === null) {
         setValue("key_volumedown", IodineGUI.defaults.keyZonesControl[0] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[0] = findValue("key_volumedown");
     }
     if (findValue("key_volumeup") === null) {
         setValue("key_volumeup", IodineGUI.defaults.keyZonesControl[1] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[1] = findValue("key_volumeup");
     }
     if (findValue("key_speedup") === null) {
         setValue("key_speedup", IodineGUI.defaults.keyZonesControl[2] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[2] = findValue("key_speedup");
     }
     if (findValue("key_slowdown") === null) {
         setValue("key_slowdown", IodineGUI.defaults.keyZonesControl[3] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[3] = findValue("key_slowdown");
     }
     if (findValue("key_speedreset") === null) {
         setValue("key_speedreset", IodineGUI.defaults.keyZonesControl[4] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[4] = findValue("key_speedreset");
     }
     if (findValue("key_fullscreen") === null) {
         setValue("key_fullscreen", IodineGUI.defaults.keyZonesControl[5] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[5] = findValue("key_fullscreen");
     }
     if (findValue("key_playpause") === null) {
         setValue("key_playpause", IodineGUI.defaults.keyZonesControl[6] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[6] = findValue("key_playpause");
     }
     if (findValue("key_restart") === null) {
         setValue("key_restart", IodineGUI.defaults.keyZonesControl[7] | 0);
-    }
-    else {
+    } else {
         IodineGUI.defaults.keyZonesControl[7] = findValue("key_restart");
     }
 }
+
 function saveKeyBindings() {
     setValue("key_a", IodineGUI.defaults.keyZonesGBA[0] | 0);
     setValue("key_b", IodineGUI.defaults.keyZonesGBA[1] | 0);
@@ -485,6 +468,7 @@ function saveKeyBindings() {
     setValue("key_playpause", IodineGUI.defaults.keyZonesControl[6] | 0);
     setValue("key_restart", IodineGUI.defaults.keyZonesControl[7] | 0);
 }
+
 function registerGUISettings() {
     document.getElementById("sound").checked = IodineGUI.defaults.sound;
     if (IodineGUI.defaults.sound) {
@@ -496,8 +480,8 @@ function registerGUISettings() {
         volControl.max = 100;
         volControl.step = 1;
         volControl.value = IodineGUI.defaults.volume * 100;
+    } catch (e) {
     }
-    catch (e) { }
     IodineGUI.mixerInput.setVolume(IodineGUI.defaults.volume);
     document.getElementById("skip_boot").checked = IodineGUI.defaults.skipBoot;
     IodineGUI.Iodine.toggleSkipBootROM(IodineGUI.defaults.skipBoot);
@@ -513,6 +497,7 @@ function registerGUISettings() {
         document.getElementById("offthread-cpu").disabled = true;
     }
 }
+
 function updatePlayButton(isPlaying) {
     isPlaying = isPlaying | 0;
     if ((isPlaying | 0) == 1) {
@@ -523,8 +508,7 @@ function updatePlayButton(isPlaying) {
             startTimer();
         }
         IodineGUI.isPlaying = true;
-    }
-    else {
+    } else {
         document.getElementById("pause").className = "hide";
         document.getElementById("play").className = "show";
         document.getElementById("menu").className = "paused";
@@ -535,48 +519,56 @@ function updatePlayButton(isPlaying) {
         IodineGUI.isPlaying = false;
     }
 }
+
 function visibilityChangeHandle() {
     processVisibilityChange(document.hidden);
 }
+
 function mozVisibilityChangeHandle() {
     processVisibilityChange(document.mozHidden);
 }
+
 function msVisibilityChangeHandle() {
     processVisibilityChange(document.msHidden);
 }
+
 function webkitVisibilityChangeHandle() {
     processVisibilityChange(document.webkitHidden);
 }
+
 function processVisibilityChange(isHidden) {
     if (!isHidden) {
         if (IodineGUI.suspended) {
             IodineGUI.suspended = false;
             IodineGUI.Iodine.play();
         }
-    }
-    else {
+    } else {
         if (document.getElementById("play").className == "hide") {
             IodineGUI.Iodine.pause();
             IodineGUI.suspended = true;
         }
     }
 }
+
 function stepVolume(delta) {
     var volume = document.getElementById("volume").value / 100;
     volume = Math.min(Math.max(volume + delta, 0), 1);
     IodineGUI.mixerInput.setVolume(volume);
     document.getElementById("volume").value = Math.round(volume * 100);
 }
+
 function volChangeFunc() {
     var volume = Math.min(Math.max(parseInt(this.value), 0), 100) * 0.01;
-    setValue("volume", + volume);
-    IodineGUI.mixerInput.setVolume(+ volume);
+    setValue("volume", +volume);
+    IodineGUI.mixerInput.setVolume(+volume);
 };
+
 function speedChangeFunc() {
     var speed = Math.min(Math.max(parseInt(this.value), 0), 100) / 50;
     speed *= speed;
     IodineGUI.Iodine.setSpeed(+speed);
 }
+
 function writeRedTemporaryText(textString) {
     if (IodineGUI.GUITimerID) {
         clearTimeout(IodineGUI.GUITimerID);
@@ -585,9 +577,11 @@ function writeRedTemporaryText(textString) {
     document.getElementById("tempMessage").textContent = textString;
     IodineGUI.GUITimerID = setTimeout(clearTempString, 5000);
 }
+
 function clearTempString() {
     document.getElementById("tempMessage").style.display = "none";
 }
+
 function resizeCanvasFunc() {
     var container = document.getElementById("main");
     var containerHeight = container.clientHeight || container.offsetHeight || 0;
@@ -602,6 +596,7 @@ function resizeCanvasFunc() {
         canvas.style.height = height + "px";
     }
 }
+
 function rebuildSavesMenu(e) {
     if (didNotEnter(document.getElementById("saves_menu_container"), e)) {
         ExportSave();
@@ -611,6 +606,7 @@ function rebuildSavesMenu(e) {
         }
     }
 }
+
 function rebuildExistingSaves() {
     var menu = document.getElementById("existing_saves_list");
     ExportSave();
@@ -620,6 +616,7 @@ function rebuildExistingSaves() {
         addExistingSaveItem(menu, keys.shift());
     }
 }
+
 function addExistingSaveItem(menu, key) {
     var listItem = document.createElement("li");
     listItem.className = "nowrap";
@@ -657,24 +654,25 @@ function addExistingSaveItem(menu, key) {
     listItem.appendChild(submenu);
     menu.appendChild(listItem);
 }
+
 function decodeKeyType(key) {
     if (key.substring(0, 15) == "SAVE_TYPE_GUID_") {
         return "Game \"" + key.substring(15) + "\" Type Code";
-    }
-    else if (key.substring(0, 10) == "SAVE_GUID_") {
+    } else if (key.substring(0, 10) == "SAVE_GUID_") {
         return "Game \"" + key.substring(10) + "\" Cartridge Data";
-    }
-    else if (key.substring(0, 15) == "SAVE_RTC_GUID_") {
+    } else if (key.substring(0, 15) == "SAVE_RTC_GUID_") {
         return "Game \"" + key.substring(15) + "\" RTC Data";
     }
     return key;
 }
+
 //Some wrappers and extensions for non-DOM3 browsers:
 function removeChildNodes(node) {
     while (node.firstChild) {
         node.removeChild(node.firstChild);
     }
 }
+
 function didNotEnter(oElement, event) {
     var target = (typeof event.target != "undefined") ? event.target : event.srcElement;
     while (target) {
@@ -685,22 +683,23 @@ function didNotEnter(oElement, event) {
     }
     return true;
 }
+
 function isSameNode(oCheck1, oCheck2) {
     return (typeof oCheck1.isSameNode == "function") ? oCheck1.isSameNode(oCheck2) : (oCheck1 === oCheck2);
 }
+
 function addEvent(sEvent, oElement, fListener) {
     try {
         oElement.addEventListener(sEvent, fListener, false);
-    }
-    catch (error) {
+    } catch (error) {
         oElement.attachEvent("on" + sEvent, fListener);    //Pity for IE.
     }
 }
+
 function removeEvent(sEvent, oElement, fListener) {
     try {
         oElement.removeEventListener(sEvent, fListener, false);
-    }
-    catch (error) {
+    } catch (error) {
         oElement.detachEvent("on" + sEvent, fListener);    //Pity for IE.
     }
 }
